@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586197777415",
+    "project_id": "symptomsync-pro",
+    "storage_bucket": "symptomsync-pro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586197777415:android:e4a3d4a353ebd2af4a3ea2",
+        "android_client_info": {
+          "package_name": "com.example.symptomsync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVCI6HDhZ4dypSgBW2qit-BqPZ_yyl0v8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

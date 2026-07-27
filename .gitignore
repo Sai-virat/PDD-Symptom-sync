@@ -1,0 +1,36 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+build/
+**/build/
+captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Firebase & Secret Keys
+*.json
+!app/google-services.json
+!composeApp/google-services.json
+serviceAccountKey.json
+backend/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+backend/venv/
+.venv/
+
+# Node / Web
+node_modules/
+**/node_modules/
+.next/
+**/ .next/
+dist/
+.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
