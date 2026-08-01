@@ -2,14 +2,16 @@ import os
 import shutil
 
 FRONTEND_OUT = os.path.join(os.path.dirname(__file__), "..", "frontend", "out")
-ANDROID_ASSETS = os.path.join(os.path.dirname(__file__), "..", "app", "src", "main", "assets")
+ANDROID_APP_ASSETS = os.path.join(os.path.dirname(__file__), "..", "app", "src", "main", "assets")
+COMPOSE_APP_ASSETS = os.path.join(os.path.dirname(__file__), "..", "composeApp", "src", "androidMain", "assets")
 
 def sync_assets():
     if os.path.exists(FRONTEND_OUT):
-        if os.path.exists(ANDROID_ASSETS):
-            shutil.rmtree(ANDROID_ASSETS)
-        shutil.copytree(FRONTEND_OUT, ANDROID_ASSETS)
-        print(f"[OK] Synced static web app bundle to Android assets: {ANDROID_ASSETS}")
+        for target in [ANDROID_APP_ASSETS, COMPOSE_APP_ASSETS]:
+            if os.path.exists(target):
+                shutil.rmtree(target)
+            shutil.copytree(FRONTEND_OUT, target)
+            print(f"[OK] Synced static web app bundle to: {target}")
     else:
         print("[Warning] frontend/out does not exist. Run npm run build first.")
 

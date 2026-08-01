@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.kotlinx.serialization.json)
+    implementation("androidx.webkit:webkit:1.11.0")
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     
     // Firebase

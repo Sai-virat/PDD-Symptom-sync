@@ -1,8 +1,8 @@
 package com.example.symptomsync
 
 import android.os.Bundle
-import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -23,20 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.webkit.WebViewAssetLoader
 
 class MainActivity : ComponentActivity() {
-
-    // Endpoints in order of preference:
-    // 1. http://localhost:8000 (ADB USB reverse port)
-    // 2. http://172.23.18.125:8000 (Wi-Fi IP)
-    // 3. http://10.0.2.2:8000 (Android Emulator)
-    // 4. file:///android_asset/index.html (Offline Assets)
-    private val urlsToTry = listOf(
-        "http://localhost:8000",
-        "http://172.23.18.125:8000",
-        "http://10.0.2.2:8000",
-        "file:///android_asset/index.html"
-    )
 
     private var webViewRef: WebView? = null
 
@@ -50,7 +39,7 @@ class MainActivity : ComponentActivity() {
                     color = Color(0xFF0F172A)
                 ) {
                     SymptomSyncWebViewScreen(
-                        urls = urlsToTry,
+                        activity = this,
                         onWebViewCreated = { webViewRef = it }
                     )
                 }
@@ -70,11 +59,19 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SymptomSyncWebViewScreen(
-    urls: List<String>,
+    activity: ComponentActivity,
     onWebViewCreated: (WebView) -> Unit
 ) {
     var isLoading by remember { mutableStateOf(true) }
-    var currentUrlIndex by remember { mutableStateOf(0) }
+
+    val assetLoader = remember {
+        WebViewAssetLoader.Builder()
+            .setDomain("appassets.androidplatform.net")
+            .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(activity))
+            .addPathHandler("/_next/", WebViewAssetLoader.AssetsPathHandler(activity))
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(activity))
+            .build()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -94,26 +91,35 @@ fun SymptomSyncWebViewScreen(
                     settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
                     webViewClient = object : WebViewClient() {
+                        override fun shouldInterceptRequest(
+                            view: WebView?,
+                            request: WebResourceRequest?
+                        ): WebResourceResponse? {
+                            val response = request?.url?.let { assetLoader.shouldInterceptRequest(it) }
+                            if (response != null) return response
+
+                            // Fallback: If requesting /_next/ or local files directly, load from assets
+                            val path = request?.url?.path
+                            if (path != null && path.startsWith("/_next/")) {
+                                try {
+                                    val assetPath = path.substring(1) // remove leading /
+                                    val inputStream = context.assets.open(assetPath)
+                                    val mimeType = if (path.endsWith(".css")) "text/css" else if (path.endsWith(".js")) "application/javascript" else "text/plain"
+                                    return WebResourceResponse(mimeType, "UTF-8", inputStream)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            return super.shouldInterceptRequest(view, request)
+                        }
+
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             isLoading = false
                         }
-
-                        override fun onReceivedError(
-                            view: WebView?,
-                            request: WebResourceRequest?,
-                            error: WebResourceError?
-                        ) {
-                            super.onReceivedError(view, request, error)
-                            // On network error, automatically try the next URL in fallback list
-                            if (currentUrlIndex < urls.size - 1) {
-                                currentUrlIndex++
-                                view?.loadUrl(urls[currentUrlIndex])
-                            }
-                        }
                     }
 
-                    loadUrl(urls[0])
+                    loadUrl("https://appassets.androidplatform.net/index.html")
                 }
             }
         )

@@ -52,6 +52,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
+            implementation("androidx.webkit:webkit:1.11.0")
         }
         val wasmJsMain by getting {
             dependencies {
