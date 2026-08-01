@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Bell, Sliders, Server } from "lucide-react";
-
-const API_BASE = "http://localhost:8000";
+import { User, Bell, Sliders, Server, LogOut } from "lucide-react";
+import { getApiBase } from "../api";
 
 export default function SettingsPage() {
   const [userName, setUserName] = useState("John Doe");
@@ -22,7 +21,8 @@ export default function SettingsPage() {
       }
     } catch (e) {}
 
-    fetch(`${API_BASE}/health`)
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/health`)
       .then(res => res.json())
       .then(data => {
         if (data.status === "healthy") {
@@ -36,6 +36,14 @@ export default function SettingsPage() {
       });
   }, []);
 
+  const handleSignOut = () => {
+    localStorage.removeItem("symptomsync_user");
+    localStorage.removeItem("symptomsync_token");
+    localStorage.removeItem("symptomsync_dietPlan");
+    localStorage.removeItem("symptomsync_foodsToAvoid");
+    window.location.href = "/login";
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-8">
       <motion.header initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-10">
@@ -47,14 +55,24 @@ export default function SettingsPage() {
       </motion.header>
 
       <div className="space-y-6">
-        <div className="bg-wellness-card p-6 rounded-3xl border border-white/5 flex items-center gap-4">
-          <div className="bg-smoothPurple/20 p-4 rounded-2xl text-smoothPurple border border-smoothPurple/30">
-            <User size={24} />
+        <div className="bg-wellness-card p-6 rounded-3xl border border-white/5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-smoothPurple/20 p-4 rounded-2xl text-smoothPurple border border-smoothPurple/30">
+              <User size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">Profile Details</h3>
+              <p className="text-wellness-white/60 text-sm">{userName} ({userEmail})</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-white">Profile Details</h3>
-            <p className="text-wellness-white/60 text-sm">{userName} ({userEmail})</p>
-          </div>
+
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-2xl font-bold transition-all active:scale-95 cursor-pointer"
+          >
+            <LogOut size={18} />
+            <span>Sign Out</span>
+          </button>
         </div>
 
         <div className="bg-wellness-card p-6 rounded-3xl border border-white/5 flex items-center gap-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Activity, Utensils, Droplets, History, User, LogOut } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -16,8 +16,17 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
-  if (pathname === "/login") return null;
+  if (pathname === "/login" || pathname === "/login.html") return null;
+
+  const handleSignOut = () => {
+    localStorage.removeItem("symptomsync_user");
+    localStorage.removeItem("symptomsync_token");
+    localStorage.removeItem("symptomsync_dietPlan");
+    localStorage.removeItem("symptomsync_foodsToAvoid");
+    window.location.href = "/login";
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-64 glass-panel border-r border-white/10 z-20">
@@ -44,7 +53,10 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-white/5">
-        <button className="flex items-center gap-3 px-4 py-3 w-full text-wellness-white/60 hover:text-white transition-colors">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-4 py-3 w-full text-wellness-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer font-bold"
+        >
           <LogOut size={20} />
           <span className="font-medium">Sign Out</span>
         </button>
