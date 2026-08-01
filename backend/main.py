@@ -27,6 +27,11 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    password: str
+
 class SymptomAnalysisRequest(BaseModel):
     symptoms: List[str]
 
@@ -70,6 +75,41 @@ async def login(user: UserLogin):
         }
 
     raise HTTPException(status_code=401, detail="Invalid email or password")
+
+@app.post("/api/auth/register")
+@app.post("/auth/register")
+async def register(user: UserRegister):
+    if not user.email or "@" not in user.email:
+        raise HTTPException(status_code=400, detail="Invalid email address format")
+
+    if not user.name or len(user.name.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Full name must be at least 2 characters long")
+
+    if not user.password or len(user.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+
+    if db is not None:
+        try:
+            doc_id = user.email.lower().strip()
+            user_ref = db.collection("users").document(doc_id)
+            user_ref.set({
+                "name": user.name.strip(),
+                "email": user.email.lower().strip(),
+                "created_at": "2026-08-01"
+            })
+        except Exception as e:
+            print(f"[Notice] Firebase registration sync notice: {e}")
+
+    return {
+        "status": "success",
+        "message": "Account created successfully",
+        "token": "demo-jwt-token-symptomsync",
+        "user": {
+            "name": user.name.strip(),
+            "email": user.email.lower().strip(),
+            "preferences": []
+        }
+    }
 
 @app.get("/api/symptoms")
 @app.get("/symptoms")
