@@ -68,8 +68,6 @@ fun SymptomSyncWebViewScreen(
         WebViewAssetLoader.Builder()
             .setDomain("appassets.androidplatform.net")
             .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(activity))
-            .addPathHandler("/_next/", WebViewAssetLoader.AssetsPathHandler(activity))
-            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(activity))
             .build()
     }
 
@@ -95,18 +93,31 @@ fun SymptomSyncWebViewScreen(
                             view: WebView?,
                             request: WebResourceRequest?
                         ): WebResourceResponse? {
-                            val response = request?.url?.let { assetLoader.shouldInterceptRequest(it) }
+                            val url = request?.url ?: return null
+                            val path = url.path ?: ""
+
+                            val response = assetLoader.shouldInterceptRequest(url)
                             if (response != null) return response
 
-                            val path = request?.url?.path
-                            if (path != null && path.startsWith("/_next/")) {
+                            try {
+                                var assetPath = if (path.startsWith("/")) path.substring(1) else path
+                                if (assetPath.isEmpty()) assetPath = "index.html"
+                                if (!assetPath.contains(".")) {
+                                    assetPath = "$assetPath.html"
+                                }
+
+                                val inputStream = context.assets.open(assetPath)
+                                val mimeType = if (assetPath.endsWith(".html")) "text/html" 
+                                    else if (assetPath.endsWith(".css")) "text/css"
+                                    else if (assetPath.endsWith(".js")) "application/javascript"
+                                    else "text/plain"
+                                return WebResourceResponse(mimeType, "UTF-8", inputStream)
+                            } catch (e: Exception) {
                                 try {
-                                    val assetPath = path.substring(1)
-                                    val inputStream = context.assets.open(assetPath)
-                                    val mimeType = if (path.endsWith(".css")) "text/css" else if (path.endsWith(".js")) "application/javascript" else "text/plain"
-                                    return WebResourceResponse(mimeType, "UTF-8", inputStream)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
+                                    val inputStream = context.assets.open("index.html")
+                                    return WebResourceResponse("text/html", "UTF-8", inputStream)
+                                } catch (ex: Exception) {
+                                    ex.printStackTrace()
                                 }
                             }
                             return super.shouldInterceptRequest(view, request)
