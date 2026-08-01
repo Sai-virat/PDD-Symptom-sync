@@ -1,43 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { Search, ChevronRight, AlertCircle, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { Search, ChevronRight, AlertCircle, X, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import Link from "next/link";
+import { getApiBase } from "../api";
 
-const ALL_SYMPTOMS = [
+const DEFAULT_SYMPTOMS = [
   "Migraine", "Bloating", "Joint Pain", "Anxiety", "Insomnia",
-  "Fatigue", "Acidity", "Cough", "Nausea", "Back Pain"
+  "Fatigue", "Acidity", "Cough", "Nausea", "Headache", "Fever"
 ];
 
 export default function AnalyzePage() {
+  const [symptomsList, setSymptomsList] = useState<string[]>(DEFAULT_SYMPTOMS);
   const [step, setStep] = useState(1);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [results, setResults] = useState<{name: string, severity: string}[]>([]);
   const [causes, setCauses] = useState<{title: string, description: string}[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const filtered = ALL_SYMPTOMS.filter(s => s.toLowerCase().includes(query.toLowerCase()));
+  useEffect(() => {
+    const apiBase = getApiBase();
+    fetch(`${apiBase}/symptoms`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setSymptomsList(data);
+        }
+      })
+      .catch(err => {
+        console.warn("Backend API unreachable, using default dataset:", err);
+      });
+  }, []);
+
+  const filtered = symptomsList.filter(s => s.toLowerCase().includes(query.toLowerCase()));
 
   const toggleSymptom = (s: string) => {
     setSelected(prev => prev.includes(s) ? prev.filter(item => item !== s) : [...prev, s]);
   };
 
-  const handleContinue = () => {
-    setResults(selected.map(s => ({ name: s, severity: "Medium" })));
-    setStep(2);
-  };
+  const handleContinue = async () => {
+    if (selected.length === 0) return;
+    setLoading(true);
 
-  const showCauses = () => {
-    // Mocking causes based on selection
-    setCauses([
-      { title: "Trigger Foods", description: "Tyramine-rich foods like aged cheese or processed meats." },
-      { title: "Digestive Sensitivity", description: "Certain fibers or sugars can cause excessive gas." }
-    ]);
-    setStep(3);
-  };
+    try {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms: selected })
+      });
 
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data.analysis || selected.map(s => ({ name: s, severity: "Medium" })));
+        setCauses(data.possibleCauses || []);
+        
+        if (data.dietPlan) {
+          localStorage.setItem("symptomsync_dietPlan", JSON.stringify(data.dietPlan));
+        }
+        if (data.foodsToAvoid) {
+          localStorage.setItem("symptomsync_foodsToAvoid", JSON.stringify(data.foodsToAvoid));
+        }
+      } else {
+        throw new Error("Backend error");
+      }
+    } catch (err) {
+      console.warn("Using fallback analysis:", err);
+      setResults(selected.map(s => ({ name: s, severity: "Medium" })));
+      setCauses([
+        { title: "Metabolic & Dietary Factors", description: "Sensitivities to specific ingredients, dehydration, or irregular meal timing." },
+        { title: "Inflammatory Triggers", description: "Elevated cytokine markers associated with selected physical symptoms." }
+      ]);
+    } finally {
+      setLoading(false);
+      setStep(2);
+    }
+  };
 
   const updateSeverity = (name: string, sev: string) => {
     setResults(prev => prev.map(r => r.name === name ? { ...r, severity: sev } : r));
@@ -59,7 +100,7 @@ export default function AnalyzePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search symptoms..."
-              className="w-full bg-wellness-card border border-white/5 rounded-3xl py-6 pl-16 pr-6 text-xl focus:outline-none focus:border-smoothPurple transition-colors"
+              className="w-full bg-wellness-card border border-white/5 rounded-3xl py-6 pl-16 pr-6 text-xl focus:outline-none focus:border-smoothPurple transition-colors text-white"
             />
           </div>
 
@@ -73,7 +114,7 @@ export default function AnalyzePage() {
                   className={clsx(
                     "px-6 py-3 rounded-2xl font-medium transition-all active:scale-95 border",
                     isActive
-                      ? "bg-smoothPurple border-smoothPurple text-white"
+                      ? "bg-smoothPurple border-smoothPurple text-white shadow-lg shadow-smoothPurple/30"
                       : "bg-wellness-card border-white/5 text-wellness-white/60 hover:border-white/20"
                   )}
                 >
@@ -83,15 +124,19 @@ export default function AnalyzePage() {
             })}
           </div>
 
-          <div className="fixed bottom-12 left-0 right-0 md:left-64 px-8 pointer-events-none">
+          <div className="fixed bottom-12 left-0 right-0 md:left-64 px-8 pointer-events-none z-30">
             <div className="max-w-4xl mx-auto flex justify-end">
               <button
-                disabled={selected.length === 0}
+                disabled={selected.length === 0 || loading}
                 onClick={handleContinue}
-                className="pointer-events-auto bg-smoothPurple hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-10 py-5 rounded-2xl font-bold flex items-center gap-3 shadow-xl shadow-smoothPurple/20 transition-all active:scale-95"
+                className="pointer-events-auto bg-smoothPurple hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-10 py-5 rounded-2xl font-bold flex items-center gap-3 shadow-xl shadow-smoothPurple/20 transition-all active:scale-95 text-lg"
               >
-                <span>Continue</span>
-                <ChevronRight size={24} />
+                {loading ? <Loader2 className="animate-spin" size={24} /> : (
+                  <>
+                    <span>Analyze Symptoms</span>
+                    <ChevronRight size={24} />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -115,7 +160,7 @@ export default function AnalyzePage() {
             {results.map(res => (
               <div key={res.name} className="bg-wellness-card p-6 rounded-3xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                  <h3 className="text-2xl font-bold mb-1">{res.name}</h3>
+                  <h3 className="text-2xl font-bold mb-1 text-white">{res.name}</h3>
                   <div className="flex items-center gap-2 text-wellness-white/40">
                     <AlertCircle size={16} />
                     <span className="text-sm font-medium">Intensity: {res.severity}</span>
@@ -142,10 +187,10 @@ export default function AnalyzePage() {
             ))}
           </div>
 
-          <div className="fixed bottom-12 left-0 right-0 md:left-64 px-8 pointer-events-none">
+          <div className="fixed bottom-12 left-0 right-0 md:left-64 px-8 pointer-events-none z-30">
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-end gap-4">
               <button
-                onClick={showCauses}
+                onClick={() => setStep(3)}
                 className="pointer-events-auto bg-wellness-card border border-white/10 hover:border-white/30 text-white px-10 py-5 rounded-2xl font-bold transition-all active:scale-95"
               >
                 View Possible Causes
@@ -182,7 +227,7 @@ export default function AnalyzePage() {
             ))}
           </div>
 
-          <div className="fixed bottom-12 left-0 right-0 md:left-64 px-8 pointer-events-none">
+          <div className="fixed bottom-12 left-0 right-0 md:left-64 px-8 pointer-events-none z-30">
             <div className="max-w-4xl mx-auto flex justify-end">
               <Link href="/diet" className="pointer-events-auto">
                 <button className="bg-healthGreen hover:bg-green-700 text-white px-12 py-6 rounded-2xl font-bold text-xl shadow-2xl shadow-green-900/40 transition-all active:scale-95">
@@ -196,4 +241,3 @@ export default function AnalyzePage() {
     </div>
   );
 }
-

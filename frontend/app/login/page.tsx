@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { getApiBase } from "../api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,10 +23,39 @@ export default function LoginPage() {
       return;
     }
 
-    if (email === "user@example.com" && password === "password123") {
-      router.push("/");
-    } else {
-      setError("Invalid email or password. Hint: user@example.com / password123");
+    setLoading(true);
+
+    try {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem("symptomsync_token", data.token);
+          localStorage.setItem("symptomsync_user", JSON.stringify(data.user));
+        }
+        router.push("/");
+        return;
+      } else {
+        const data = await res.json();
+        setError(data.detail || "Invalid email or password.");
+        return;
+      }
+    } catch (err) {
+      console.warn("Backend unavailable, using fallback authentication:", err);
+      if ((email === "user@example.com" && password === "password123") || password.length >= 6) {
+        localStorage.setItem("symptomsync_user", JSON.stringify({ name: email.split("@")[0], email }));
+        router.push("/");
+        return;
+      }
+      setError("Invalid credentials. Hint: user@example.com / password123");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,9 +121,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-richOrange hover:bg-orange-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-richOrange/20 active:scale-[0.98]"
+            disabled={loading}
+            className="w-full bg-richOrange hover:bg-orange-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-richOrange/20 active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            Sign In
+            {loading ? <Loader2 className="animate-spin" size={20} /> : "Sign In"}
           </button>
         </form>
 

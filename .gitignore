@@ -9,6 +9,7 @@ captures
 .externalNativeBuild
 .cxx
 local.properties
+.artifacts/
 
 # Firebase & Secret Keys
 *.json
@@ -24,11 +25,13 @@ __pycache__/
 backend/venv/
 .venv/
 
-# Node / Web
+# Node / Web / Frontend
 node_modules/
 **/node_modules/
 .next/
-**/ .next/
+**/.next/
+out/
+**/out/
 dist/
 .env*
 npm-debug.log*

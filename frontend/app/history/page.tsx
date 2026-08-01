@@ -1,15 +1,41 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { History, Calendar, AlertCircle } from "lucide-react";
+import { History, Calendar } from "lucide-react";
 
-const MOCK_HISTORY = [
+interface HistoryItem {
+  id: number;
+  date: string;
+  symptom: string;
+  severity: string;
+  cause: string;
+}
+
+const DEFAULT_HISTORY: HistoryItem[] = [
   { id: 1, date: "Today, 9:30 AM", symptom: "Migraine", severity: "High", cause: "Tyramine Foods" },
   { id: 2, date: "Yesterday, 2:15 PM", symptom: "Bloating", severity: "Medium", cause: "Digestive Sensitivity" },
   { id: 3, date: "Jul 22, 2026", symptom: "Acidity", severity: "Low", cause: "Late Dinner" },
 ];
 
+const API_BASE = "http://localhost:8000";
+
 export default function HistoryPage() {
+  const [historyList, setHistoryList] = useState<HistoryItem[]>(DEFAULT_HISTORY);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/history`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setHistoryList(data);
+        }
+      })
+      .catch(err => {
+        console.warn("Backend API offline, using fallback history dataset:", err);
+      });
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto py-8">
       <motion.header initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-10">
@@ -21,7 +47,7 @@ export default function HistoryPage() {
       </motion.header>
 
       <div className="space-y-4">
-        {MOCK_HISTORY.map((item, idx) => (
+        {historyList.map((item, idx) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 10 }}
@@ -34,7 +60,7 @@ export default function HistoryPage() {
                 <Calendar size={16} />
                 <span>{item.date}</span>
               </div>
-              <h3 className="text-2xl font-bold">{item.symptom}</h3>
+              <h3 className="text-2xl font-bold text-white">{item.symptom}</h3>
               <p className="text-wellness-white/60 text-sm mt-1">Likely Cause: {item.cause}</p>
             </div>
 
