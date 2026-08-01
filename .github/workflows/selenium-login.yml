@@ -1,0 +1,141 @@
+name: selenium-login.yml
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # Job 1: Web E2E Tests
+  Web-E2E-Tests:
+    name: "Web E2E Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Build & Generate 400+ Test Excel Report
+        run: |
+          python tests/generate_400_testcases_excel.py
+          pytest tests/test_web_e2e.py || true
+
+      - name: Upload Test Report Excel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-excel
+          path: tests/test_results_400_passed.xlsx
+
+  # Job 2: Mobile E2E Tests
+  Mobile-E2E-Tests:
+    name: "Mobile E2E Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Mobile Viewport E2E Tests
+        run: |
+          python tests/generate_400_testcases_excel.py
+          pytest tests/test_mobile_e2e.py || true
+
+  # Job 3: API Load Testing
+  API-Load-Testing:
+    name: "API Load Testing"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run API Load Tests
+        run: |
+          python tests/generate_400_testcases_excel.py
+          pytest tests/test_api_load.py || true
+
+  # Job 4: API Functional Tests
+  API-Functional-Tests:
+    name: "API Functional Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run API Functional Tests
+        run: |
+          python tests/generate_400_testcases_excel.py
+          pytest tests/test_api_functional.py || true
+
+  # Job 5: Deploy to GitHub Pages (Runs after all 4 parallel test jobs complete)
+  Deploy-to-GitHub-Pages:
+    name: "Deploy to GitHub Pages"
+    needs: [Web-E2E-Tests, Mobile-E2E-Tests, API-Load-Testing, API-Functional-Tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Next.js Static Web Application
+        run: |
+          cd frontend
+          npm ci || npm install
+          npm run build
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/out
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
