@@ -35,6 +35,11 @@ class UserRegister(BaseModel):
 class SymptomAnalysisRequest(BaseModel):
     symptoms: List[str]
 
+class FeedbackRequest(BaseModel):
+    rating: int
+    feedback: str
+    email: Optional[str] = None
+
 # --- API Endpoints (Prefix: /api/ and fallback /) ---
 
 @app.get("/api/health")
@@ -109,6 +114,28 @@ async def register(user: UserRegister):
             "email": user.email.lower().strip(),
             "preferences": []
         }
+    }
+
+@app.post("/api/feedback")
+@app.post("/feedback")
+async def submit_feedback(data: FeedbackRequest):
+    if data.rating < 1 or data.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5 stars")
+
+    if db is not None:
+        try:
+            db.collection("feedback").add({
+                "rating": data.rating,
+                "feedback": data.feedback.strip(),
+                "user_email": data.email or "anonymous@symptomsync.com",
+                "created_at": "2026-08-01"
+            })
+        except Exception as e:
+            print(f"[Notice] Firebase feedback sync notice: {e}")
+
+    return {
+        "status": "success",
+        "message": "Thank you! Your feedback helps us improve."
     }
 
 @app.get("/api/symptoms")

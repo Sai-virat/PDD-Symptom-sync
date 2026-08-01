@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Activity, Utensils, Droplets, History, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Activity, Utensils, Droplets, History, User, MessageSquareHeart, LogOut } from "lucide-react";
 import { clsx } from "clsx";
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { name: "Water Tracker", href: "/water", icon: Droplets },
   { name: "History", href: "/history", icon: History },
   { name: "Settings", href: "/settings", icon: User },
+  { name: "Feedback", href: "/feedback", icon: MessageSquareHeart },
 ];
 
 export default function Sidebar() {
