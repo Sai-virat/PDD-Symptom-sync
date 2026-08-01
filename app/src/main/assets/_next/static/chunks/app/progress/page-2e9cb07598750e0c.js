@@ -1,0 +1,16 @@
+(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[92],{7518:function(e,s,t){Promise.resolve().then(t.bind(t,9729))},9729:function(e,s,t){"use strict";t.r(s),t.d(s,{default:function(){return i}});var l=t(7437),n=t(1513),r=t(3225);/**
+ * @license lucide-react v0.378.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let a=(0,t(8030).Z)("Award",[["path",{d:"m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526",key:"1yiouv"}],["circle",{cx:"12",cy:"8",r:"6",key:"1vp47v"}]]);var c=t(3231);function i(){return(0,l.jsxs)("div",{className:"max-w-4xl mx-auto py-8",children:[(0,l.jsxs)(n.E.header,{initial:{opacity:0},animate:{opacity:1},className:"mb-10",children:[(0,l.jsxs)("h1",{className:"text-4xl font-bold mb-4 flex items-center gap-3",children:[(0,l.jsx)(r.Z,{className:"text-smoothPurple",size:36}),"Your Health Progress"]}),(0,l.jsx)("p",{className:"text-wellness-white/60",children:"Track your adherence, symptom improvements, and wellness trends"})]}),(0,l.jsxs)("div",{className:"grid md:grid-cols-3 gap-6 mb-10",children:[(0,l.jsxs)("div",{className:"bg-wellness-card p-6 rounded-3xl border border-white/5",children:[(0,l.jsx)(a,{className:"text-yellow-500 mb-4",size:32}),(0,l.jsx)("h3",{className:"text-wellness-white/60 text-sm font-bold uppercase",children:"Streak"}),(0,l.jsx)("p",{className:"text-3xl font-bold mt-1",children:"7 Days Active"})]}),(0,l.jsxs)("div",{className:"bg-wellness-card p-6 rounded-3xl border border-white/5",children:[(0,l.jsx)(c.Z,{className:"text-healthGreen mb-4",size:32}),(0,l.jsx)("h3",{className:"text-wellness-white/60 text-sm font-bold uppercase",children:"Diet Adherence"}),(0,l.jsx)("p",{className:"text-3xl font-bold mt-1",children:"92% Average"})]}),(0,l.jsxs)("div",{className:"bg-wellness-card p-6 rounded-3xl border border-white/5",children:[(0,l.jsx)(r.Z,{className:"text-blue-400 mb-4",size:32}),(0,l.jsx)("h3",{className:"text-wellness-white/60 text-sm font-bold uppercase",children:"Symptom Reduction"}),(0,l.jsx)("p",{className:"text-3xl font-bold mt-1",children:"-35% Complaints"})]})]})]})}},3231:function(e,s,t){"use strict";t.d(s,{Z:function(){return l}});/**
+ * @license lucide-react v0.378.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let l=(0,t(8030).Z)("CircleCheck",[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"m9 12 2 2 4-4",key:"dzmm74"}]])},3225:function(e,s,t){"use strict";t.d(s,{Z:function(){return l}});/**
+ * @license lucide-react v0.378.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */let l=(0,t(8030).Z)("TrendingUp",[["polyline",{points:"22 7 13.5 15.5 8.5 10.5 2 17",key:"126l90"}],["polyline",{points:"16 7 22 7 22 13",key:"kwv8wd"}]])}},function(e){e.O(0,[207,971,23,744],function(){return e(e.s=7518)}),_N_E=e.O()}]);

@@ -26,9 +26,17 @@ import androidx.compose.ui.viewinterop.AndroidView
 
 class MainActivity : ComponentActivity() {
 
-    // Server endpoints: Wi-Fi IP for real USB mobile device, 10.0.2.2 for Android Emulator
-    private val serverUrl = "http://172.23.18.125:8000"
-    private val fallbackEmulatorUrl = "http://10.0.2.2:8000"
+    // Endpoints in order of preference:
+    // 1. http://localhost:8000 (ADB USB reverse port)
+    // 2. http://172.23.18.125:8000 (Wi-Fi IP)
+    // 3. http://10.0.2.2:8000 (Android Emulator)
+    // 4. file:///android_asset/index.html (Offline Assets)
+    private val urlsToTry = listOf(
+        "http://localhost:8000",
+        "http://172.23.18.125:8000",
+        "http://10.0.2.2:8000",
+        "file:///android_asset/index.html"
+    )
 
     private var webViewRef: WebView? = null
 
@@ -42,8 +50,7 @@ class MainActivity : ComponentActivity() {
                     color = Color(0xFF0F172A)
                 ) {
                     SymptomSyncWebViewScreen(
-                        primaryUrl = serverUrl,
-                        fallbackUrl = fallbackEmulatorUrl,
+                        urls = urlsToTry,
                         onWebViewCreated = { webViewRef = it }
                     )
                 }
@@ -63,11 +70,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SymptomSyncWebViewScreen(
-    primaryUrl: String,
-    fallbackUrl: String,
+    urls: List<String>,
     onWebViewCreated: (WebView) -> Unit
 ) {
     var isLoading by remember { mutableStateOf(true) }
+    var currentUrlIndex by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -80,6 +87,8 @@ fun SymptomSyncWebViewScreen(
                     settings.databaseEnabled = true
                     settings.allowFileAccess = true
                     settings.allowContentAccess = true
+                    settings.allowFileAccessFromFileURLs = true
+                    settings.allowUniversalAccessFromFileURLs = true
                     settings.useWideViewPort = true
                     settings.loadWithOverviewMode = true
                     settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -96,14 +105,15 @@ fun SymptomSyncWebViewScreen(
                             error: WebResourceError?
                         ) {
                             super.onReceivedError(view, request, error)
-                            // If primary Wi-Fi IP is unreachable, automatically fall back to emulator loopback
-                            if (request?.url?.toString()?.contains("172.23.18.125") == true) {
-                                view?.loadUrl(fallbackUrl)
+                            // On network error, automatically try the next URL in fallback list
+                            if (currentUrlIndex < urls.size - 1) {
+                                currentUrlIndex++
+                                view?.loadUrl(urls[currentUrlIndex])
                             }
                         }
                     }
 
-                    loadUrl(primaryUrl)
+                    loadUrl(urls[0])
                 }
             }
         )
