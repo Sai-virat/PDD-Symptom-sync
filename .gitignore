@@ -18,6 +18,12 @@ local.properties
 *.json
 !app/google-services.json
 !composeApp/google-services.json
+!package.json
+!**/package.json
+!package-lock.json
+!**/package-lock.json
+!tsconfig.json
+!**/tsconfig.json
 serviceAccountKey.json
 backend/*.json
 
