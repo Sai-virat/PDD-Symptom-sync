@@ -1,8 +1,8 @@
 package com.example.symptomsync
 
 import android.os.Bundle
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -23,9 +23,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.webkit.WebViewAssetLoader
 
 class MainActivity : ComponentActivity() {
+
+    // Server URLs to try (http://localhost:8000 via ADB reverse port forwarding, http://10.0.2.2:8000 for emulator)
+    private val urlsToTry = listOf(
+        "http://localhost:8000",
+        "http://10.0.2.2:8000",
+        "http://172.23.18.125:8000"
+    )
 
     private var webViewRef: WebView? = null
 
@@ -39,7 +45,7 @@ class MainActivity : ComponentActivity() {
                     color = Color(0xFF0F172A)
                 ) {
                     SymptomSyncWebViewScreen(
-                        activity = this,
+                        urls = urlsToTry,
                         onWebViewCreated = { webViewRef = it }
                     )
                 }
@@ -59,17 +65,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SymptomSyncWebViewScreen(
-    activity: ComponentActivity,
+    urls: List<String>,
     onWebViewCreated: (WebView) -> Unit
 ) {
     var isLoading by remember { mutableStateOf(true) }
-
-    val assetLoader = remember {
-        WebViewAssetLoader.Builder()
-            .setDomain("appassets.androidplatform.net")
-            .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(activity))
-            .build()
-    }
+    var currentUrlIndex by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -82,57 +82,36 @@ fun SymptomSyncWebViewScreen(
                     settings.databaseEnabled = true
                     settings.allowFileAccess = true
                     settings.allowContentAccess = true
-                    settings.allowFileAccessFromFileURLs = true
-                    settings.allowUniversalAccessFromFileURLs = true
                     settings.useWideViewPort = true
                     settings.loadWithOverviewMode = true
                     settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                    settings.userAgentString = settings.userAgentString.replace("Mobile", "Mobile_App")
 
                     webViewClient = object : WebViewClient() {
-                        override fun shouldInterceptRequest(
-                            view: WebView?,
-                            request: WebResourceRequest?
-                        ): WebResourceResponse? {
-                            val url = request?.url ?: return null
-                            val path = url.path ?: ""
-
-                            // Standard assetLoader response
-                            val response = assetLoader.shouldInterceptRequest(url)
-                            if (response != null) return response
-
-                            // Handle route paths without .html extension (e.g. /analyze, /diet, /settings, /feedback, /login)
-                            try {
-                                var assetPath = if (path.startsWith("/")) path.substring(1) else path
-                                if (assetPath.isEmpty()) assetPath = "index.html"
-                                if (!assetPath.contains(".")) {
-                                    assetPath = "$assetPath.html"
-                                }
-
-                                val inputStream = context.assets.open(assetPath)
-                                val mimeType = if (assetPath.endsWith(".html")) "text/html" 
-                                    else if (assetPath.endsWith(".css")) "text/css"
-                                    else if (assetPath.endsWith(".js")) "application/javascript"
-                                    else "text/plain"
-                                return WebResourceResponse(mimeType, "UTF-8", inputStream)
-                            } catch (e: Exception) {
-                                // Fallback to index.html for SPA client-side routing
-                                try {
-                                    val inputStream = context.assets.open("index.html")
-                                    return WebResourceResponse("text/html", "UTF-8", inputStream)
-                                } catch (ex: Exception) {
-                                    ex.printStackTrace()
-                                }
-                            }
-                            return super.shouldInterceptRequest(view, request)
+                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                            request?.url?.let { view?.loadUrl(it.toString()) }
+                            return true
                         }
 
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             isLoading = false
                         }
+
+                        override fun onReceivedError(
+                            view: WebView?,
+                            request: WebResourceRequest?,
+                            error: WebResourceError?
+                        ) {
+                            super.onReceivedError(view, request, error)
+                            if (currentUrlIndex < urls.size - 1) {
+                                currentUrlIndex++
+                                view?.loadUrl(urls[currentUrlIndex])
+                            }
+                        }
                     }
 
-                    loadUrl("https://appassets.androidplatform.net/index.html")
+                    loadUrl(urls[0])
                 }
             }
         )
