@@ -116,6 +116,9 @@ jobs:
     name: "Deploy to GitHub Pages"
     needs: [Web-E2E-Tests, Mobile-E2E-Tests, API-Load-Testing, API-Functional-Tests]
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -125,17 +128,30 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build Next.js Static Web Application
+      - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm ci || npm install
+
+      - name: Build Next.js Static Web Application
+        run: |
+          cd frontend
           npm run build
+
+      - name: Deploy to gh-pages Branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/out
+          force_orphan: true
 
       - name: Upload GitHub Pages Artifact
         uses: actions/upload-pages-artifact@v3
+        continue-on-error: true
         with:
           path: frontend/out
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages API
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
