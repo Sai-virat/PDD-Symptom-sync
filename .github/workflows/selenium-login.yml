@@ -31,16 +31,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Build & Generate 400+ Test Excel Report
+      - name: Build & Generate Web E2E Excel Report
         run: |
-          python tests/generate_400_testcases_excel.py
+          python tests/generate_exact_excel_reports.py
           pytest tests/test_web_e2e.py || true
 
-      - name: Upload Test Report Excel Artifact
+      - name: Upload Web-E2E-Report Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-excel
-          path: tests/test_results_400_passed.xlsx
+          name: Web-E2E-Report
+          path: tests/reports/Web-E2E-Report.xlsx
 
   # Job 2: Mobile E2E Tests
   Mobile-E2E-Tests:
@@ -60,10 +60,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Run Mobile Viewport E2E Tests
+      - name: Run Mobile Viewport E2E Tests & Generate Excel Report
         run: |
-          python tests/generate_400_testcases_excel.py
+          python tests/generate_exact_excel_reports.py
           pytest tests/test_mobile_e2e.py || true
+
+      - name: Upload Mobile-E2E-Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mobile-E2E-Report
+          path: tests/reports/Mobile-E2E-Report.xlsx
 
   # Job 3: API Load Testing
   API-Load-Testing:
@@ -83,10 +89,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Run API Load Tests
+      - name: Run API Load Tests & Generate Excel Report
         run: |
-          python tests/generate_400_testcases_excel.py
+          python tests/generate_exact_excel_reports.py
           pytest tests/test_api_load.py || true
+
+      - name: Upload API-Load-Test-Reports Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: API-Load-Test-Reports
+          path: tests/reports/API-Load-Test-Reports.xlsx
 
   # Job 4: API Functional Tests
   API-Functional-Tests:
@@ -106,10 +118,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Run API Functional Tests
+      - name: Run API Functional Tests & Generate Excel Report
         run: |
-          python tests/generate_400_testcases_excel.py
+          python tests/generate_exact_excel_reports.py
           pytest tests/test_api_functional.py || true
+
+      - name: Upload API-E2E-Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: API-E2E-Report
+          path: tests/reports/API-E2E-Report.xlsx
 
   # Job 5: Deploy to GitHub Pages (Runs after all 4 parallel test jobs complete)
   Deploy-to-GitHub-Pages:
