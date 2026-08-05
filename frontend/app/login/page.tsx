@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Lock, Mail, Eye, EyeOff, Loader2, UserCheck, ArrowRight, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getApiBase } from "../api";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("Reddyomsai350");
   const [email, setEmail] = useState("reddyomsai350@gmail.com");
@@ -40,6 +42,13 @@ export default function LoginPage() {
     } catch (e) {}
   };
 
+  const navigateToDashboard = () => {
+    try {
+      router.push("/");
+    } catch (e) {}
+    window.location.replace("/");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -64,7 +73,7 @@ export default function LoginPage() {
           const data = await res.json();
           const userObj = data.user || { name: name || "Reddyomsai350", email: email.trim(), phone: phone.trim() || "6305473867" };
           syncProfileState(userObj);
-          window.location.href = "/";
+          navigateToDashboard();
           return;
         } else {
           const data = await res.json();
@@ -83,7 +92,7 @@ export default function LoginPage() {
           const data = await res.json();
           const userObj = data.user || { name: name.trim() || "Reddyomsai350", email: email.trim(), phone: phone.trim() || "6305473867" };
           syncProfileState(userObj);
-          window.location.href = "/";
+          navigateToDashboard();
           return;
         } else {
           const data = await res.json();
@@ -97,7 +106,7 @@ export default function LoginPage() {
       const userPhone = phone.trim() || "6305473867";
       const userData = { name: displayName, email: email.trim(), phone: userPhone };
       syncProfileState(userData);
-      window.location.href = "/";
+      navigateToDashboard();
     } finally {
       setLoading(false);
     }

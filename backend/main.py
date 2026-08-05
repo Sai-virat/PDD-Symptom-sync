@@ -529,10 +529,12 @@ async def serve_frontend(full_path: str):
 
     clean_path = full_path.strip("/")
 
+    NO_CACHE_HEADERS = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+
     # Check direct file match
     file_path = os.path.join(out_dir, clean_path)
     if clean_path and os.path.exists(file_path) and os.path.isfile(file_path):
-        return FileResponse(file_path)
+        return FileResponse(file_path, headers=NO_CACHE_HEADERS)
 
     # Handle Next.js RSC .txt prefetch requests
     base_clean = clean_path[:-4] if clean_path.endswith(".txt") else clean_path
@@ -540,12 +542,12 @@ async def serve_frontend(full_path: str):
     # Check html file match (e.g. analyze -> analyze.html)
     html_file = os.path.join(out_dir, f"{base_clean}.html")
     if base_clean and os.path.exists(html_file):
-        return FileResponse(html_file)
+        return FileResponse(html_file, headers=NO_CACHE_HEADERS)
 
     # Fallback to index.html for SPA routes
     index_file = os.path.join(out_dir, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers=NO_CACHE_HEADERS)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
