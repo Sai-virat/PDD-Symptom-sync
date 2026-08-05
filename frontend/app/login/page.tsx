@@ -64,7 +64,7 @@ export default function LoginPage() {
           const data = await res.json();
           const userObj = data.user || { name: name || "Reddyomsai350", email: email.trim(), phone: phone.trim() || "6305473867" };
           syncProfileState(userObj);
-          window.location.href = "/water";
+          window.location.href = "/";
           return;
         } else {
           const data = await res.json();
@@ -83,7 +83,7 @@ export default function LoginPage() {
           const data = await res.json();
           const userObj = data.user || { name: name.trim() || "Reddyomsai350", email: email.trim(), phone: phone.trim() || "6305473867" };
           syncProfileState(userObj);
-          window.location.href = "/water";
+          window.location.href = "/";
           return;
         } else {
           const data = await res.json();
@@ -97,7 +97,7 @@ export default function LoginPage() {
       const userPhone = phone.trim() || "6305473867";
       const userData = { name: displayName, email: email.trim(), phone: userPhone };
       syncProfileState(userData);
-      window.location.href = "/water";
+      window.location.href = "/";
     } finally {
       setLoading(false);
     }
