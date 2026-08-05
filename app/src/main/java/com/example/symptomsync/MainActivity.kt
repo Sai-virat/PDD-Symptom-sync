@@ -26,11 +26,15 @@ import androidx.compose.ui.viewinterop.AndroidView
 
 class MainActivity : ComponentActivity() {
 
-    // Server URLs to try (http://localhost:8000 via ADB reverse port forwarding, http://10.0.2.2:8000 for emulator)
     private val urlsToTry = listOf(
-        "http://localhost:8000",
+        "http://10.0.2.2:8000/login",
         "http://10.0.2.2:8000",
-        "http://172.23.18.125:8000"
+        "http://172.23.51.181:8000/login",
+        "http://172.23.51.181:8000",
+        "http://localhost:8000/login",
+        "http://localhost:8000",
+        "http://172.23.21.94:8000/login",
+        "http://172.23.21.94:8000"
     )
 
     private var webViewRef: WebView? = null
@@ -89,8 +93,7 @@ fun SymptomSyncWebViewScreen(
 
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                            request?.url?.let { view?.loadUrl(it.toString()) }
-                            return true
+                            return false // Allow WebView to handle navigation internally
                         }
 
                         override fun onPageFinished(view: WebView?, url: String?) {
@@ -104,14 +107,14 @@ fun SymptomSyncWebViewScreen(
                             error: WebResourceError?
                         ) {
                             super.onReceivedError(view, request, error)
-                            if (currentUrlIndex < urls.size - 1) {
+                            if (request?.isForMainFrame == true && currentUrlIndex < urls.size - 1) {
                                 currentUrlIndex++
                                 view?.loadUrl(urls[currentUrlIndex])
                             }
                         }
                     }
 
-                    loadUrl(urls[0])
+                    loadUrl(urls[currentUrlIndex])
                 }
             }
         )

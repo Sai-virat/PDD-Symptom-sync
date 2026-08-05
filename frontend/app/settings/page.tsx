@@ -8,9 +8,38 @@ import { getApiBase } from "../api";
 export default function SettingsPage() {
   const [userName, setUserName] = useState("User");
   const [userEmail, setUserEmail] = useState("user@example.com");
+  const [userPhone, setUserPhone] = useState("6305473867");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [smsApiKey, setSmsApiKey] = useState("");
+  const [gmailAppPassword, setGmailAppPassword] = useState("");
+
+  const saveSmsConfig = async (key: string) => {
+    try {
+      const apiBase = getApiBase();
+      await fetch(`${apiBase}/reminders/config_sms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: key })
+      });
+    } catch (e) {}
+  };
+
+  const saveGmailConfig = async (pass: string) => {
+    try {
+      const apiBase = getApiBase();
+      await fetch(`${apiBase}/reminders/config_email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender_email: userEmail,
+          app_password: pass
+        })
+      });
+    } catch (e) {}
+  };
 
   const [dietaryOptions, setDietaryOptions] = useState({
     lowHistamine: true,
@@ -38,6 +67,13 @@ export default function SettingsPage() {
         if (u.email) {
           setUserEmail(u.email);
           setEditEmail(u.email);
+        }
+        if (u.phone) {
+          setUserPhone(u.phone);
+          setEditPhone(u.phone);
+        } else {
+          setUserPhone("6305473867");
+          setEditPhone("6305473867");
         }
       }
     } catch (e) {}
@@ -73,14 +109,17 @@ export default function SettingsPage() {
     e.preventDefault();
     setUserName(editName);
     setUserEmail(editEmail);
-    localStorage.setItem("symptomsync_user", JSON.stringify({ name: editName, email: editEmail }));
+    setUserPhone(editPhone);
+    const updatedUser = { name: editName, email: editEmail, phone: editPhone };
+    localStorage.setItem("symptomsync_user", JSON.stringify(updatedUser));
+    localStorage.setItem("symptomsync_user_profile", JSON.stringify(updatedUser));
     setIsEditingProfile(false);
   };
 
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = "/login.html";
+    window.location.href = "/login";
   };
 
   const toggleDietOption = (key: keyof typeof dietaryOptions) => {
@@ -100,33 +139,25 @@ export default function SettingsPage() {
       <div className="space-y-6">
         {/* Profile Card */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-wellness-card p-6 rounded-3xl border border-white/10 shadow-xl">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-smoothPurple/20 p-4 rounded-2xl text-smoothPurple border border-smoothPurple/30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+            <div className="flex items-start gap-3.5 min-w-0">
+              <div className="bg-smoothPurple/20 p-3.5 rounded-2xl text-smoothPurple border border-smoothPurple/30 shrink-0">
                 <User size={24} />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-bold text-white">Profile Details</h3>
-                <p className="text-wellness-white/60 text-sm">{userName} ({userEmail})</p>
+                <p className="text-wellness-white/80 text-sm font-semibold truncate">{userName}</p>
+                <p className="text-wellness-white/50 text-xs truncate">{userEmail}</p>
+                <p className="text-emerald-400 text-xs font-bold mt-0.5">📱 SMS: {userPhone}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsEditingProfile(!isEditingProfile)}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors text-sm cursor-pointer"
-              >
-                {isEditingProfile ? "Cancel" : "Edit Profile"}
-              </button>
-
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-5 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl font-bold transition-all active:scale-95 cursor-pointer shadow-lg shadow-red-500/10 text-sm"
-              >
-                <LogOut size={16} />
-                <span>Sign Out</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setIsEditingProfile(!isEditingProfile)}
+              className="w-full sm:w-auto px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-all text-xs cursor-pointer active:scale-95 border border-white/10 text-center shrink-0"
+            >
+              {isEditingProfile ? "Cancel" : "Edit Profile"}
+            </button>
           </div>
 
           {isEditingProfile && (
@@ -149,9 +180,20 @@ export default function SettingsPage() {
                   className="w-full bg-wellness-charcoal border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-richOrange"
                 />
               </div>
+              <div>
+                <label className="text-xs font-bold text-emerald-400 block mb-1">Mobile Phone Number (SMS Alerts)</label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={e => setEditPhone(e.target.value)}
+                  className="w-full bg-wellness-charcoal border border-emerald-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-400 text-sm font-semibold"
+                  placeholder="6305473867"
+                />
+              </div>
+
               <button
                 type="submit"
-                className="bg-richOrange hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold transition-all cursor-pointer"
+                className="bg-richOrange hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold transition-all cursor-pointer shadow-lg shadow-orange-600/20"
               >
                 Save Changes
               </button>
@@ -237,6 +279,17 @@ export default function SettingsPage() {
           >
             <RefreshCw size={16} className={testingPing ? "animate-spin" : ""} />
             <span>Test Ping</span>
+          </button>
+        </motion.div>
+
+        {/* Sign Out Card at Bottom of Page */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="pt-4">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 rounded-3xl font-extrabold transition-all active:scale-95 cursor-pointer shadow-xl shadow-red-500/10 text-base"
+          >
+            <LogOut size={22} />
+            <span>Sign Out of SymptomSync</span>
           </button>
         </motion.div>
       </div>

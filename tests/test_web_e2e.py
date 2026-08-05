@@ -10,7 +10,7 @@ import os
 API_BASE = "http://localhost:8000"
 
 def test_web_dashboard_rendering():
-    res = requests.get(f"{API_BASE}/health")
+    res = requests.get(f"{API_BASE}/api/health")
     assert res.status_code == 200
     assert res.json().get("status") == "healthy"
 

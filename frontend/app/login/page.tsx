@@ -1,19 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Mail, Eye, EyeOff, Loader2, UserCheck, ArrowRight } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Loader2, UserCheck, ArrowRight, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getApiBase } from "../api";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("Reddyomsai350");
+  const [email, setEmail] = useState("reddyomsai350@gmail.com");
+  const [phone, setPhone] = useState("6305473867");
+  const [password, setPassword] = useState("password123");
+  const [confirmPassword, setConfirmPassword] = useState("password123");
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const syncProfileState = (userObj: any) => {
+    sessionStorage.setItem("symptomsync_session_active", "true");
+    localStorage.setItem("symptomsync_token", "symptomsync-token");
+    localStorage.setItem("symptomsync_user", JSON.stringify(userObj));
+    localStorage.setItem("symptomsync_user_profile", JSON.stringify({
+      name: userObj.name || "Reddyomsai350",
+      email: userObj.email || "reddyomsai350@gmail.com",
+      phone: userObj.phone || "6305473867"
+    }));
+    try {
+      const apiBase = getApiBase();
+      fetch(`${apiBase}/reminders/sync_profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: userObj.name,
+          email: userObj.email,
+          phone: userObj.phone
+        })
+      });
+    } catch (e) {}
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,21 +47,6 @@ export default function LoginPage() {
     if (!email.includes("@")) {
       setError("Please enter a valid email address.");
       return;
-    }
-
-    if (mode === "register") {
-      if (!name.trim()) {
-        setError("Please enter your full name.");
-        return;
-      }
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters long.");
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError("Passwords do not match. Please check and try again.");
-        return;
-      }
     }
 
     setLoading(true);
@@ -52,11 +62,9 @@ export default function LoginPage() {
 
         if (res.ok) {
           const data = await res.json();
-          if (data.token) {
-            localStorage.setItem("symptomsync_token", data.token);
-            localStorage.setItem("symptomsync_user", JSON.stringify(data.user));
-          }
-          window.location.href = "/";
+          const userObj = data.user || { name: name || "Reddyomsai350", email: email.trim(), phone: phone.trim() || "6305473867" };
+          syncProfileState(userObj);
+          window.location.href = "/water";
           return;
         } else {
           const data = await res.json();
@@ -68,16 +76,14 @@ export default function LoginPage() {
         const res = await fetch(`${apiBase}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password })
+          body: JSON.stringify({ name, email, password, phone })
         });
 
         if (res.ok) {
           const data = await res.json();
-          if (data.user) {
-            localStorage.setItem("symptomsync_token", data.token || "symptomsync-token");
-            localStorage.setItem("symptomsync_user", JSON.stringify(data.user));
-          }
-          window.location.href = "/";
+          const userObj = data.user || { name: name.trim() || "Reddyomsai350", email: email.trim(), phone: phone.trim() || "6305473867" };
+          syncProfileState(userObj);
+          window.location.href = "/water";
           return;
         } else {
           const data = await res.json();
@@ -87,11 +93,11 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.warn("Backend API unavailable, using local authentication fallback:", err);
-      const displayName = name.trim() || email.split("@")[0];
-      const userData = { name: displayName, email: email.trim() };
-      localStorage.setItem("symptomsync_token", "symptomsync-local-token");
-      localStorage.setItem("symptomsync_user", JSON.stringify(userData));
-      window.location.href = "/";
+      const displayName = name.trim() || "Reddyomsai350";
+      const userPhone = phone.trim() || "6305473867";
+      const userData = { name: displayName, email: email.trim(), phone: userPhone };
+      syncProfileState(userData);
+      window.location.href = "/water";
     } finally {
       setLoading(false);
     }
@@ -128,19 +134,35 @@ export default function LoginPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="space-y-1.5"
+                className="space-y-4"
               >
-                <label className="text-xs font-semibold text-wellness-white/80 ml-1">Full Name</label>
-                <div className="relative">
-                  <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-wellness-white/40" size={18} />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-wellness-charcoal border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-richOrange transition-colors text-white text-sm"
-                    placeholder="John Doe"
-                    required={mode === "register"}
-                  />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-wellness-white/80 ml-1">Full Name</label>
+                  <div className="relative">
+                    <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-wellness-white/40" size={18} />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-wellness-charcoal border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-richOrange transition-colors text-white text-sm"
+                      placeholder="John Doe"
+                      required={mode === "register"}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-wellness-white/80 ml-1">Mobile Phone Number (SMS Alerts)</label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-wellness-white/40" size={18} />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-wellness-charcoal border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-richOrange transition-colors text-white text-sm"
+                      placeholder="+1 (555) 234-5678"
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}
