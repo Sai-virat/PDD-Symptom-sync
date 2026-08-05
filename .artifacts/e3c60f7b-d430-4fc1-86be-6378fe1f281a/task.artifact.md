@@ -1,3 +1,0 @@
-- [x] Update `AuthViewModel.kt` with registration validation logic
-- [x] Update `AuthScreens.kt` with registration error feedback and UI polish
-- [ ] Verify registration flow and UI visibility

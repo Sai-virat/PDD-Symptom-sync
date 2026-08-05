@@ -1,9 +1,0 @@
-- [x] Research and Planning
-- [x] Backend Migration to Firestore
-- [x] Connect Android App to Firestore
-    - [x] Update `SymptomRepository.kt` for Firestore support
-    - [x] Update `CoreFlowViewModel.kt` to fetch symptoms on start
-    - [x] Refactor `DashboardViewModel.kt` to use Firestore data
-- [ ] Verification
-    - [ ] Verify symptom list in "Add Symptoms" screen
-    - [ ] Verify analysis and diet plan using Firestore data

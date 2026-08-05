@@ -1,6 +1,0 @@
-- [x] Add Gemini AI dependencies to `app/build.gradle.kts`
-- [x] Create `GeminiRepository` in `:app` module
-- [x] Update `CoreFlowViewModel` and `DashboardViewModel` with AI logic
-- [x] Add Internet Permission to `AndroidManifest.xml`
-- [x] Improved AI Error Handling and Debug Logs
-- [ ] Final Verification with Correct API Key
